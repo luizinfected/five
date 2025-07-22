@@ -16,7 +16,7 @@ class Company(Base):
     address_number = Column(String(20))
     address_info = Column(String(100))
     address_neighborhood = Column(String(100))
-    addrress_city = Column(String(100))
+    address_city = Column(String(100))
     address_state = Column(String(20))
     postal_code = Column(String(20))
     active = Column(Boolean, default=True)

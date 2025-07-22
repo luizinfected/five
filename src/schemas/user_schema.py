@@ -4,10 +4,13 @@ from datetime import datetime
 
 
 class CreateUser(BaseModel):
+    company_id: Optional[int] = None
     email: str 
     hashed_password: str
-    role: str
+    role: Optional[str] = "user"
     name: str
+    active: bool = True
+    last_login: Optional[datetime]
     class Config:
         from_attributes = True
 

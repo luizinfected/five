@@ -14,33 +14,6 @@ import env
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-async def get_current_user(
-        request: Request,
-        db: Session = Depends(get_db)
-    ) -> User:
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Missing or invalid Authorization header"
-            )
-
-        token = auth_header[len("Bearer "):]
-
-        try:
-            payload = jwt.decode(token, env.SECRET_KEY, algorithms=[env.ALGORITHM])
-            email = payload.get("sub")
-            if email is None:
-                raise HTTPException(status_code=401, detail="Invalid token payload")
-        except JWTError:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        user = db.query(User).filter(User.email == email).first()
-        if not user:
-            raise HTTPException(status_code=401, detail="User not found")
-
-        return user
-
 class UserService:
 
     async def login(
@@ -75,22 +48,9 @@ class UserService:
         schema: CreateUser
     ):
         
-        user_exist = db.query(User).filter(User.email == schema.email).first()
-
-        if user_exist:
-             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="This e-mail already exists"
-            )
-
-        hashed_password = self.hash_password(schema.hashed_password)
-
-        user = User(
-            email=schema.email, 
-            hashed_password=hashed_password, 
-            role=schema.role, 
-            name=schema.name
-        )
+        user_data = schema.dict()
+        user_data["hashed_password"] = self.hash_password(user_data["hashed_password"])
+        user = User(**user_data)
 
         db.add(user)
         db.commit()
