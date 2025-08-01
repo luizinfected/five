@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
 from sqlalchemy.orm import relationship
 from database_connection import Base
+from beanie import Document
 
 class Company(Base):
     __tablename__ = 'companies'
@@ -31,3 +32,36 @@ class Company(Base):
     fiscal_invoices = relationship("FiscalInvoice", back_populates="company")
     users = relationship("User", back_populates="company")
 
+
+
+from beanie import Document
+from pydantic import EmailStr
+from typing import Optional
+from datetime import datetime
+from src.enums.company_enums import CompanyPlanEnum
+
+class Company(Document):
+    legal_name: str
+    trade_name: Optional[str]
+    state_registration: Optional[str]
+    cnpj: str
+    cellphone: Optional[str]
+    email: EmailStr
+    address_street: Optional[str]
+    address_number: Optional[str]
+    address_info: Optional[str]
+    address_neighborhood: Optional[str]
+    address_city: Optional[str]
+    address_state: Optional[str]
+    postal_code: Optional[str]
+    active: bool = True
+    signature_date: Optional[datetime]
+    plan: CompanyPlanEnum = CompanyPlanEnum.free
+    trial_start_date: Optional[datetime]
+    trial_end_date: Optional[datetime]
+    trial_used: bool = False
+    created_at: Optional[datetime] = datetime.utcnow()
+    updated_at: Optional[datetime] = datetime.utcnow()
+
+    class Settings:
+        name = "companies"  # nome da collection no Mongo
