@@ -1,8 +1,8 @@
 
+from beanie import PydanticObjectId
 from fastapi import HTTPException
 from src.models.company_model import Company
 from src.schemas.company_schema import CreateCompany, CompanyResponse, UpdateCompany
-from sqlalchemy.orm import Session
 from starlette import status
 from starlette.responses import JSONResponse
 
@@ -10,75 +10,89 @@ class CompanyService:
 
     async def create_company(
         self, 
-        db: Session,
         schema: CreateCompany
-    ):
+    ):  
+        company_exist = await Company.find_one(Company.cnpj == schema.cnpj)
+
+        if company_exist:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This CNPJ already exists"
+            )
         
         company_data = schema.model_dump()
 
         company = Company(**company_data)
+        await company.insert()
 
-        db.add(company)
-        db.commit()
-        db.refresh(company)
-
-        
-
-        return company_data
+        return company
     
     async def list_companies(
         self, 
-        db: Session,
+        limit,
+        skip
     ):
-        
-        companies = db.query(Company).all()
+        companies = await Company.find_all().skip(skip).limit(limit).to_list()
 
         return companies
 
     async def detail_company(
         self, 
-        db: Session,
-        id: int
+        id: str
     ):
-        
-        company = db.query(Company).filter(Company.id == id).first()
 
-        return company
+        company = await Company.get(PydanticObjectId(id))
 
-    async def update_company(
-        self, 
-        db: Session,
-        schema: UpdateCompany
-    ):
-        
-        company = db.query(Company).filter(Company.id == schema.id).first()
-
-        if not company:
+        if not company: 
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Company not found"
             )
 
+        return company
+
+    async def update_company(
+        self, 
+        schema: UpdateCompany
+    ):  
+        company:Company = await Company.find_one(Company.id == schema.id)
+
+        if not company:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"message": "Company not found"}
+            )
+        
+        if schema.cnpj != company.cnpj:
+            return JSONResponse(status_code=409, content={"message": "CNPJ already exists"})
+        
         company_data = schema.model_dump(exclude_unset=True)
 
-        for key, value in company_data.items():
-            setattr(company, key, value)
+        
 
-        db.add(company)
-        db.commit()
-        db.refresh(company)
+        await company.set(company_data)
 
         return company
     
     async def delete_company(
         self, 
-        db: Session,
         id: int
     ):
         
-        company = db.query(Company).filter(Company.id == id).first()
+        company: Company = Company.find_one(Company.id == id)
 
-        db.delete(company)
-        db.commit()
+        if not company:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"message": "Company not found"}
+            )
+        
+        if company.active:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                content={"message": "Your Company need to be disabled"}
+            )
+
+        company.delete()
 
         return {"message": "Company deleted"}

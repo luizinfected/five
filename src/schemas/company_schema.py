@@ -59,25 +59,25 @@ class CompanyResponse(BaseModel):
 
 class UpdateCompany(BaseModel):
     id: PydanticObjectId
-    legal_name: Optional[str]
-    trade_name: Optional[str]
-    state_registration: Optional[str]
-    cnpj: Optional[str]
-    cellphone: Optional[str]
-    email: Optional[EmailStr]
-    address_street: Optional[str]
-    address_number: Optional[str]
-    address_info: Optional[str]
-    address_neighborhood: Optional[str]
-    address_city: Optional[str]
-    address_state: Optional[str]
-    postal_code: Optional[str]
-    active: bool = True
-    plan: CompanyPlanEnum
+    legal_name: Optional[str] = None
+    trade_name: Optional[str] = None
+    state_registration: Optional[str] = None
+    cnpj: Optional[str] = None
+    cellphone: Optional[str] = None
+    email: Optional[EmailStr] = None
+    address_street: Optional[str] = None
+    address_number: Optional[str] = None
+    address_info: Optional[str] = None
+    address_neighborhood: Optional[str] = None
+    address_city: Optional[str] = None
+    address_state: Optional[str] = None
+    postal_code: Optional[str] = None
+    active: bool = None
+    plan: CompanyPlanEnum = None
     signature_date: Optional[datetime] = None
     trial_start_date: Optional[datetime] = None
     trial_end_date: Optional[datetime] = None
-    trial_used: bool = False
+    trial_used: bool = None
     updated_at: Optional[datetime] = datetime
 
     class Config:
