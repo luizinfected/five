@@ -1,21 +1,23 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, func, ForeignKey
-from sqlalchemy.orm import relationship
-from database_connection import Base
+from beanie import Document, PydanticObjectId
+from pydantic import EmailStr, Field
+from typing import Optional
+from datetime import datetime
+from src.enums.company_enums import CompanyPlanEnum
 
-class User(Base):
-    __tablename__ = "users"
+class User(Document):
+    id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
+    email: EmailStr
+    hashed_password: str
+    name: str
+    role: str
+    active: bool
+    last_login: datetime
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
 
-    id = Column(Integer, primary_key=True, index=True)
-    company_id = Column(Integer, ForeignKey('companies.id'))
+    # TODO: Need to be inmplemented
+    # company_id
+    # fiscal_invoices
 
-    email = Column(String(255), unique=True, index=True)
-    hashed_password = Column(String(255))
-    name = Column(String(255))
-    role = Column(String(255))
-    active = Column(Boolean, default=True)
-    last_login = Column(DateTime)
-    created_at = Column(DateTime, server_default=func.now()) 
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-    fiscal_invoices = relationship("FiscalInvoice", back_populates="user")
-    company = relationship("Company", back_populates="users")
+    class Settings:
+        name = "users" 
